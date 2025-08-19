@@ -1,0 +1,1653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Care Compare Measure Timeline Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f7fa;
+            color: #333333;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #004877 0%, #0066aa 100%);
+            color: white;
+            padding: 28px 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        
+        .header p {
+            font-size: 16px;
+            opacity: 0.95;
+        }
+        
+        .main-container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .program-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+        
+        .program-card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .program-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+        
+        .program-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #004877;
+            margin-bottom: 12px;
+        }
+        
+        .program-status {
+            font-size: 18px;
+            color: #555555;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .program-next {
+            font-size: 14px;
+            color: #888888;
+        }
+        
+        .timeline-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        
+        .timeline-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 28px 32px;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .timeline-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #004877;
+            margin-bottom: 20px;
+        }
+        
+        .view-toggles {
+            display: flex;
+            gap: 2px;
+            background: white;
+            padding: 4px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .toggle-btn {
+            background: transparent;
+            border: none;
+            padding: 12px 24px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666666;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-btn:hover {
+            background: #f0f4f8;
+        }
+        
+        .toggle-btn.active {
+            background: linear-gradient(135deg, #004877 0%, #0066aa 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(0,72,119,0.3);
+        }
+        
+        .view-content {
+            padding: 32px;
+        }
+        
+        .measure-view {
+            display: none;
+        }
+        
+        .measure-view.active {
+            display: block;
+        }
+        
+        .data-status {
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border-left: 4px solid #28a745;
+            margin-bottom: 24px;
+            font-size: 14px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .data-status.warning {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border-left-color: #ffc107;
+        }
+        
+        .data-status.error {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            border-left-color: #dc3545;
+        }
+        
+        .status-icon {
+            font-size: 18px;
+        }
+        
+        /* Timeline Gantt Chart */
+        .gantt-container {
+            margin: 24px 0;
+            background: #fafbfc;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .gantt-axis {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-left: 180px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666666;
+        }
+        
+        .gantt-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+            height: 56px;
+        }
+        
+        .gantt-label {
+            width: 160px;
+            font-weight: 600;
+            font-size: 15px;
+            color: #333333;
+        }
+        
+        .gantt-timeline {
+            flex: 1;
+            height: 44px;
+            background: linear-gradient(90deg, #f5f5f5 0%, #eeeeee 100%);
+            border: 1px solid #d0d0d0;
+            position: relative;
+            margin-left: 20px;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .gantt-bar {
+            position: absolute;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 4px;
+            transition: opacity 0.3s ease;
+        }
+        
+        .gantt-bar:hover {
+            opacity: 0.9;
+        }
+        
+        .care-compare-bar {
+            background: linear-gradient(135deg, #004877 0%, #0066aa 100%);
+        }
+        
+        .star-ratings-bar {
+            background: linear-gradient(135deg, #60b5e5 0%, #4a9fd4 100%);
+        }
+        
+        .leapfrog-bar {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        
+        /* Measure Tables */
+        .dimension-section {
+            margin-bottom: 32px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .dimension-title {
+            background: linear-gradient(135deg, #004877 0%, #0066aa 100%);
+            color: white;
+            padding: 16px 20px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .measure-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        
+        .table-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            font-weight: 600;
+            color: #333333;
+        }
+        
+        .table-header th {
+            padding: 14px 12px;
+            text-align: left;
+            border: 1px solid #dee2e6;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .measure-table td {
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            font-size: 14px;
+            vertical-align: top;
+        }
+        
+        .measure-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .measure-name {
+            font-weight: 600;
+            color: #004877;
+        }
+        
+        .performance-period {
+            font-weight: 600;
+            color: #004877;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        .yes-indicator {
+            color: #28a745;
+            font-weight: 600;
+        }
+        
+        .no-indicator {
+            color: #dc3545;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666666;
+        }
+        
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #004877;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Care Compare Measure Timeline Dashboard</h1>
+        <p>Performance timelines across Care Compare, Star Ratings, and Leapfrog programs</p>
+    </div>
+
+    <div class="main-container">
+        <!-- Program Overview Cards -->
+        <div class="program-overview">
+            <div class="program-card">
+                <div class="program-name">Care Compare</div>
+                <div class="program-status">July 2025 Release</div>
+                <div class="program-next">Next: October 2025</div>
+            </div>
+            <div class="program-card">
+                <div class="program-name">Star Ratings</div>
+                <div class="program-status">July 2025 Release</div>
+                <div class="program-next">Next: July 2026</div>
+            </div>
+            <div class="program-card">
+                <div class="program-name">Leapfrog</div>
+                <div class="program-status">Spring 2025 Release</div>
+                <div class="program-next">Next: Fall 2025</div>
+            </div>
+        </div>
+
+        <!-- Timeline Section -->
+        <div class="timeline-section">
+            <div class="timeline-header">
+                <div class="timeline-title">Current Performance Periods Being Published</div>
+                <div class="view-toggles">
+                    <button class="toggle-btn active" data-view="timeline">Timeline Overview</button>
+                    <button class="toggle-btn" data-view="care-compare">Care Compare Measures</button>
+                    <button class="toggle-btn" data-view="star-ratings">Star Ratings Measures</button>
+                    <button class="toggle-btn" data-view="leapfrog">Leapfrog Measures</button>
+                </div>
+            </div>
+
+            <div class="view-content">
+                <div id="data-status" class="data-status">
+                    <span class="status-icon">⏳</span>
+                    <span>Loading data from Google Sheets...</span>
+                </div>
+                
+                <!-- Manual Data Import Option -->
+                <details id="manual-import" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <summary style="cursor: pointer; font-weight: 600; color: #004877;">
+                        📊 Manual Data Import (Click to expand)
+                    </summary>
+                    <div style="margin-top: 15px;">
+                        <p style="margin-bottom: 10px; color: #666;">
+                            If automatic connection fails, you can paste CSV data directly from your Google Sheet here:
+                        </p>
+                        <ol style="margin-bottom: 15px; color: #666; font-size: 14px;">
+                            <li>Open your Google Sheet</li>
+                            <li>Select all data (Ctrl+A or Cmd+A)</li>
+                            <li>Copy (Ctrl+C or Cmd+C)</li>
+                            <li>Paste into the box below</li>
+                            <li>Click "Import Data"</li>
+                        </ol>
+                        <textarea id="csv-input" 
+                                 placeholder="Paste your CSV or tab-delimited data here..." 
+                                 style="width: 100%; height: 200px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 12px;">
+                        </textarea>
+                        <button onclick="importManualData()" 
+                                style="margin-top: 10px; padding: 10px 20px; background: linear-gradient(135deg, #004877 0%, #0066aa 100%); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">
+                            Import Data
+                        </button>
+                    </div>
+                </details>
+
+                <!-- Timeline Overview -->
+                <div id="timeline-view" class="measure-view active">
+                    <div class="gantt-container">
+                        <div class="gantt-axis">
+                            <span>2020</span>
+                            <span>2021</span>
+                            <span>2022</span>
+                            <span>2023</span>
+                            <span>2024</span>
+                            <span>2025</span>
+                        </div>
+                        <div id="gantt-chart">
+                            <div class="loading">
+                                <div class="loading-spinner"></div>
+                                <p>Loading timeline...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Care Compare Measures -->
+                <div id="care-compare-view" class="measure-view">
+                    <div id="care-compare-content">
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            <p>Loading Care Compare measures...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Star Ratings Measures -->
+                <div id="star-ratings-view" class="measure-view">
+                    <div id="star-ratings-content">
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            <p>Loading Star Ratings measures...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Leapfrog Measures -->
+                <div id="leapfrog-view" class="measure-view">
+                    <div id="leapfrog-content">
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            <p>Loading Leapfrog measures...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Google Sheets Configuration
+        const SHEET_ID = '1_Ko_4qNIGizG-hhJnUGTOZkQTpsv8JCyVzrTy7dFFCA';
+        
+        // Your deployed Google Apps Script Web App URL
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxoI9OF1JRq6UsOkzEBDu_N3AY83vlFquXHwGXH3RhM7Pw8BMPAJC3br6-JGs_h8c6-/exec';
+        
+        // Direct CSV export URLs for each sheet (using gid parameter)
+        const SHEET_GIDS = {
+            july2025: '0',  // First sheet is usually gid=0
+            careCompare: '1', // You may need to update these GIDs
+            starRatings: '2',
+            leapfrog: '3'
+        };
+        
+        // Application State
+        let dashboardData = {
+            careCompare: [],
+            starRatings: [],
+            leapfrog: [],
+            dateRanges: {},
+            loaded: false
+        };
+
+        // Initialize Dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadGoogleSheetsData();
+            setupToggleButtons();
+        });
+
+        // Setup toggle functionality
+        function setupToggleButtons() {
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const view = this.dataset.view;
+                    switchView(view);
+                });
+            });
+        }
+
+        function switchView(view) {
+            // Update button states
+            document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`[data-view="${view}"]`).classList.add('active');
+            
+            // Update views
+            document.querySelectorAll('.measure-view').forEach(v => v.classList.remove('active'));
+            document.getElementById(view + '-view').classList.add('active');
+            
+            // Load data if needed
+            if (dashboardData.loaded) {
+                if (view === 'care-compare') {
+                    renderCareCompareData();
+                } else if (view === 'star-ratings') {
+                    renderStarRatingsData();
+                } else if (view === 'leapfrog') {
+                    renderLeapfrogData();
+                }
+            }
+        }
+
+        // Load Google Sheets data using multiple fallback methods
+        async function loadGoogleSheetsData() {
+            try {
+                updateStatus('Connecting to Google Sheets...', 'loading');
+                
+                let data = null;
+                
+                // Method 1: Try Google Apps Script Web App FIRST (most reliable if configured)
+                if (GOOGLE_APPS_SCRIPT_URL && GOOGLE_APPS_SCRIPT_URL.startsWith('https://script.google.com')) {
+                    try {
+                        console.log('Trying Google Apps Script Web App...');
+                        console.log('URL:', GOOGLE_APPS_SCRIPT_URL);
+                        const response = await fetch(GOOGLE_APPS_SCRIPT_URL);
+                        
+                        if (response.ok) {
+                            const result = await response.json();
+                            console.log('Google Apps Script response:', result);
+                            
+                            if (result.success && result.data) {
+                                // Check if it's formatted data (has careCompare array)
+                                if (result.data.careCompare && Array.isArray(result.data.careCompare)) {
+                                    console.log('Using formatted data from Apps Script');
+                                    dashboardData.careCompare = result.data.careCompare;
+                                    dashboardData.starRatings = result.data.starRatings || [];
+                                    dashboardData.leapfrog = result.data.leapfrog || [];
+                                    data = true; // Flag that we have data
+                                } else if (result.data) {
+                                    // It's returning raw sheet data - need to process it
+                                    console.log('Processing raw sheet data from Apps Script');
+                                    console.log('Available sheets:', Object.keys(result.data));
+                                    
+                                    // Convert the sheets object to array format for processing
+                                    const sheetsArray = [];
+                                    
+                                    // Process July 2025 Data Release sheet
+                                    if (result.data['July 2025 Data Release']) {
+                                        sheetsArray.push({ values: result.data['July 2025 Data Release'] });
+                                    }
+                                    
+                                    // Process Care Compare Website Only sheet
+                                    if (result.data['Care Compare Website Only']) {
+                                        sheetsArray.push({ values: result.data['Care Compare Website Only'] });
+                                    }
+                                    
+                                    // Process Star Ratings sheet
+                                    if (result.data['Star Ratings Measures Only']) {
+                                        sheetsArray.push({ values: result.data['Star Ratings Measures Only'] });
+                                    }
+                                    
+                                    // Process Leapfrog sheet
+                                    if (result.data['Leapfrog Safety Grades']) {
+                                        sheetsArray.push({ values: result.data['Leapfrog Safety Grades'] });
+                                    }
+                                    
+                                    if (sheetsArray.length > 0) {
+                                        data = sheetsArray;
+                                    }
+                                }
+                                console.log('Successfully loaded data from Google Apps Script');
+                            }
+                        } else {
+                            console.log('Google Apps Script response not OK:', response.status, response.statusText);
+                        }
+                    } catch (gasError) {
+                        console.log('Google Apps Script failed:', gasError);
+                        console.error('Full error:', gasError);
+                    }
+                } else {
+                    console.log('Google Apps Script URL not configured properly');
+                    console.log('Current URL value:', GOOGLE_APPS_SCRIPT_URL);
+                }
+                
+                // Method 2: Try direct CSV export with CORS proxy options (only if Apps Script didn't work)
+                if (!data) {
+                    const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GIDS.july2025}`;
+                    
+                    // Try multiple CORS proxy services
+                    const corsProxies = [
+                        `https://api.allorigins.win/raw?url=${encodeURIComponent(csvUrl)}`,
+                        `https://corsproxy.io/?${encodeURIComponent(csvUrl)}`,
+                        `https://cors-anywhere.herokuapp.com/${csvUrl}`,
+                        `https://thingproxy.freeboard.io/fetch/${csvUrl}`
+                    ];
+                    
+                    for (const proxyUrl of corsProxies) {
+                        try {
+                            console.log(`Trying proxy: ${proxyUrl.substring(0, 30)}...`);
+                            const response = await fetch(proxyUrl, {
+                                method: 'GET',
+                                headers: {
+                                    'Accept': 'text/csv,text/plain,*/*'
+                                }
+                            });
+                            
+                            if (response.ok) {
+                                const text = await response.text();
+                                // Check if we got actual CSV data (not an error page)
+                                if (text && (text.includes(',') || text.includes('\t')) && text.includes('\n')) {
+                                    data = parseCSVData(text);
+                                    console.log('Successfully loaded data via CORS proxy');
+                                    break;
+                                }
+                            }
+                        } catch (proxyError) {
+                            console.log(`Proxy failed: ${proxyError.message}`);
+                            continue;
+                        }
+                    }
+                }
+                
+                // Method 3: Try Google Sheets API v4 with public access (no API key needed if sheet is public)
+                if (!data) {
+                    try {
+                        console.log('Trying Google Sheets public API...');
+                        // For public sheets, we can try without an API key
+                        const publicApiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/July%202025%20Data%20Release!A1:F100`;
+                        const response = await fetch(publicApiUrl);
+                        
+                        if (response.ok) {
+                            const result = await response.json();
+                            data = [result];
+                            console.log('Successfully loaded data from Google Sheets public API');
+                        }
+                    } catch (apiError) {
+                        console.log('Public API method failed:', apiError.message);
+                    }
+                }
+                
+                if (data === true) {
+                    // Data was already processed by Google Apps Script
+                    const measureCount = dashboardData.careCompare.length + 
+                                       dashboardData.starRatings.length + 
+                                       dashboardData.leapfrog.length;
+                    updateStatus(`✅ Connected via Google Apps Script - ${measureCount} measures loaded`, 'success');
+                    dashboardData.loaded = true;
+                    generateGanttChart();
+                    
+                    console.log('Dashboard data loaded:', {
+                        careCompare: dashboardData.careCompare.length + ' measures',
+                        starRatings: dashboardData.starRatings.length + ' measures',
+                        leapfrog: dashboardData.leapfrog.length + ' measures'
+                    });
+                    
+                    // Render current view
+                    const activeView = document.querySelector('.toggle-btn.active').dataset.view;
+                    if (activeView === 'care-compare') renderCareCompareData();
+                    else if (activeView === 'star-ratings') renderStarRatingsData();
+                    else if (activeView === 'leapfrog') renderLeapfrogData();
+                } else if (data && data[0]) {
+                    processGoogleSheetsData(data);
+                    const measureCount = dashboardData.careCompare.length + 
+                                       dashboardData.starRatings.length + 
+                                       dashboardData.leapfrog.length;
+                    updateStatus(`✅ Connected to Google Sheets - ${measureCount} measures loaded`, 'success');
+                    dashboardData.loaded = true;
+                    generateGanttChart();
+                    
+                    console.log('Dashboard data processed:', {
+                        careCompare: dashboardData.careCompare.length + ' measures',
+                        starRatings: dashboardData.starRatings.length + ' measures',
+                        leapfrog: dashboardData.leapfrog.length + ' measures'
+                    });
+                    
+                    // Render current view
+                    const activeView = document.querySelector('.toggle-btn.active').dataset.view;
+                    if (activeView === 'care-compare') renderCareCompareData();
+                    else if (activeView === 'star-ratings') renderStarRatingsData();
+                    else if (activeView === 'leapfrog') renderLeapfrogData();
+                } else {
+                    throw new Error('Could not load data from Google Sheets - using sample data');
+                }
+                
+            } catch (error) {
+                console.error('Error loading Google Sheets data:', error);
+                console.log('Loading sample data as fallback...');
+                updateStatus('⚠️ Using sample data - See instructions below to set up Google Apps Script', 'warning');
+                loadDetailedSampleData();
+                generateGanttChart();
+                dashboardData.loaded = true;
+                
+                // Show setup instructions
+                showSetupInstructions();
+            }
+        }
+        
+        // Show setup instructions for Google Apps Script
+        function showSetupInstructions() {
+            const instructionsHTML = `
+                <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                    <h3 style="color: #856404; margin-bottom: 15px;">📋 Setup Instructions for Live Data Connection</h3>
+                    <p style="color: #856404; margin-bottom: 10px;">To connect to your Google Sheet reliably, follow these steps:</p>
+                    <ol style="color: #856404; line-height: 1.8;">
+                        <li><strong>Open Google Apps Script:</strong> Go to <a href="https://script.google.com" target="_blank">script.google.com</a></li>
+                        <li><strong>Create New Project:</strong> Click "New Project"</li>
+                        <li><strong>Copy the Script:</strong> Copy the Google Apps Script code provided separately</li>
+                        <li><strong>Deploy as Web App:</strong>
+                            <ul style="margin-top: 5px;">
+                                <li>Click "Deploy" → "New Deployment"</li>
+                                <li>Choose type: "Web app"</li>
+                                <li>Set "Execute as": Me</li>
+                                <li>Set "Who has access": Anyone</li>
+                                <li>Click "Deploy"</li>
+                            </ul>
+                        </li>
+                        <li><strong>Copy the Web App URL:</strong> You'll get a URL like:<br>
+                            <code style="background: #f8f9fa; padding: 4px 8px; border-radius: 4px;">https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec</code>
+                        </li>
+                        <li><strong>Update This Dashboard:</strong> Replace GOOGLE_APPS_SCRIPT_URL in the code with your URL</li>
+                    </ol>
+                    <p style="color: #856404; margin-top: 15px;">
+                        <strong>Alternative:</strong> Use the Manual Data Import option above to paste data directly from your spreadsheet.
+                    </p>
+                </div>
+            `;
+            
+            // Insert instructions after the data status
+            const statusElement = document.getElementById('data-status');
+            if (statusElement && !document.getElementById('setup-instructions')) {
+                const instructionsDiv = document.createElement('div');
+                instructionsDiv.id = 'setup-instructions';
+                instructionsDiv.innerHTML = instructionsHTML;
+                statusElement.parentNode.insertBefore(instructionsDiv, statusElement.nextSibling);
+            }
+        }
+
+        // Parse CSV data
+        function parseCSVData(csvText) {
+            const lines = csvText.split('\n').filter(line => line.trim());
+            const data = [];
+            
+            lines.forEach(line => {
+                const row = [];
+                let current = '';
+                let inQuotes = false;
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        row.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                row.push(current.trim());
+                data.push(row);
+            });
+            
+            return [{ values: data }];
+        }
+
+        // Process Google Sheets data
+        function processGoogleSheetsData(sheetsData) {
+            console.log('Processing Google Sheets data, number of sheets:', sheetsData.length);
+            
+            // Clear existing data
+            dashboardData.careCompare = [];
+            dashboardData.starRatings = [];
+            dashboardData.leapfrog = [];
+            
+            // Process July 2025 Data Release sheet (first sheet)
+            if (sheetsData[0] && sheetsData[0].values) {
+                const values = sheetsData[0].values;
+                console.log('Processing July 2025 sheet with', values.length, 'rows');
+                
+                let headerIndex = -1;
+                let currentDimension = '';
+                
+                // Find header row - look for "Dimension" or "Care Compare"
+                for (let i = 0; i < Math.min(10, values.length); i++) {
+                    const row = values[i];
+                    if (row && row.length > 0) {
+                        const rowText = row.join(' ').toLowerCase();
+                        if (rowText.includes('dimension') || rowText.includes('care compare measure')) {
+                            headerIndex = i;
+                            console.log('Found header at row', i, ':', row);
+                            break;
+                        }
+                    }
+                }
+                
+                if (headerIndex >= 0) {
+                    // Process Care Compare measures
+                    for (let i = headerIndex + 1; i < values.length; i++) {
+                        const row = values[i];
+                        if (!row || row.length === 0) continue;
+                        
+                        // Check if this is a dimension row (has value in first column but not second)
+                        if (row[0] && (!row[1] || row[1] === '')) {
+                            currentDimension = row[0];
+                            console.log('Found dimension:', currentDimension);
+                        } 
+                        // Check if this is a measure row (has value in second column)
+                        else if (row[1] && row[1] !== '') {
+                            const measure = {
+                                dimension: row[0] || currentDimension,
+                                measureName: row[1],
+                                usedInStarRating: row[3] === 'Yes' || row[3] === true || row[3] === 'TRUE',
+                                updateFrequency: row[4] || 'Quarterly',
+                                careComparePeriod: row[5] || row[4] || 'See documentation'
+                            };
+                            dashboardData.careCompare.push(measure);
+                        }
+                    }
+                    console.log('Processed', dashboardData.careCompare.length, 'Care Compare measures');
+                }
+            }
+            
+            // Process Star Ratings sheet (if exists)
+            if (sheetsData.length > 2 && sheetsData[2] && sheetsData[2].values) {
+                const values = sheetsData[2].values;
+                console.log('Processing Star Ratings sheet with', values.length, 'rows');
+                
+                let currentDimension = '';
+                let headerFound = false;
+                
+                for (let i = 0; i < values.length; i++) {
+                    const row = values[i];
+                    if (!row || row.length === 0) continue;
+                    
+                    // Skip until we find a header-like row
+                    if (!headerFound) {
+                        const rowText = row.join(' ').toLowerCase();
+                        if (rowText.includes('measure') || rowText.includes('star rating')) {
+                            headerFound = true;
+                            console.log('Found Star Ratings header at row', i);
+                            continue;
+                        }
+                    }
+                    
+                    if (headerFound) {
+                        // Check if this is a dimension row
+                        if (row[0] && (!row[1] || row[1] === '')) {
+                            currentDimension = row[0];
+                        } 
+                        // Check if this is a measure row
+                        else if (row[1]) {
+                            dashboardData.starRatings.push({
+                                dimension: currentDimension,
+                                measureId: row[1],
+                                measureName: row[2] || row[1],
+                                sourcedFrom: row[3] || 'CMS',
+                                performancePeriod: row[4] || 'See documentation'
+                            });
+                        }
+                    }
+                }
+                console.log('Processed', dashboardData.starRatings.length, 'Star Ratings measures');
+            }
+            
+            // Process Leapfrog sheet (if exists)
+            if (sheetsData.length > 3 && sheetsData[3] && sheetsData[3].values) {
+                const values = sheetsData[3].values;
+                console.log('Processing Leapfrog sheet with', values.length, 'rows');
+                
+                let currentDimension = '';
+                let headerFound = false;
+                
+                for (let i = 0; i < values.length; i++) {
+                    const row = values[i];
+                    if (!row || row.length === 0) continue;
+                    
+                    // Skip until we find a header-like row
+                    if (!headerFound) {
+                        const rowText = row.join(' ').toLowerCase();
+                        if (rowText.includes('measure') || rowText.includes('leapfrog')) {
+                            headerFound = true;
+                            console.log('Found Leapfrog header at row', i);
+                            continue;
+                        }
+                    }
+                    
+                    if (headerFound) {
+                        // Check if this is a dimension row
+                        if (row[0] && (!row[1] || row[1] === '')) {
+                            currentDimension = row[0];
+                        } 
+                        // Check if this is a measure row
+                        else if (row[1]) {
+                            dashboardData.leapfrog.push({
+                                dimension: currentDimension,
+                                measureId: row[1],
+                                measureName: row[2] || row[1],
+                                publicDescription: row[3] || '',
+                                sourcedFrom: row[4] || 'Leapfrog',
+                                performancePeriod: row[5] || 'See documentation'
+                            });
+                        }
+                    }
+                }
+                console.log('Processed', dashboardData.leapfrog.length, 'Leapfrog measures');
+            }
+            
+            // If we didn't get much data, log what we found
+            if (dashboardData.careCompare.length === 0) {
+                console.log('Warning: No Care Compare measures found. Check data structure.');
+                if (sheetsData[0] && sheetsData[0].values && sheetsData[0].values.length > 0) {
+                    console.log('First few rows of sheet 1:', sheetsData[0].values.slice(0, 5));
+                }
+            }
+            
+            calculateDateRanges();
+        }
+
+        // Enhanced sample data with more detailed information
+        function loadDetailedSampleData() {
+            // Based on your actual Excel file structure
+            dashboardData.careCompare = [
+                // HCAHPS Measures
+                {
+                    dimension: 'HCAHPS',
+                    measureName: 'HCAHPS Summary Star Rating',
+                    usedInStarRating: true,
+                    updateFrequency: 'Annually',
+                    careComparePeriod: '7/1/2023 - 6/30/2024'
+                },
+                {
+                    dimension: 'HCAHPS',
+                    measureName: 'Communication with Nurses',
+                    usedInStarRating: true,
+                    updateFrequency: 'Quarterly',
+                    careComparePeriod: '7/1/2023 - 6/30/2024'
+                },
+                {
+                    dimension: 'HCAHPS',
+                    measureName: 'Communication with Doctors',
+                    usedInStarRating: true,
+                    updateFrequency: 'Quarterly',
+                    careComparePeriod: '7/1/2023 - 6/30/2024'
+                },
+                {
+                    dimension: 'HCAHPS',
+                    measureName: 'Responsiveness of Hospital Staff',
+                    usedInStarRating: true,
+                    updateFrequency: 'Quarterly',
+                    careComparePeriod: '7/1/2023 - 6/30/2024'
+                },
+                {
+                    dimension: 'HCAHPS',
+                    measureName: 'Communication About Medicines',
+                    usedInStarRating: true,
+                    updateFrequency: 'Quarterly',
+                    careComparePeriod: '7/1/2023 - 6/30/2024'
+                },
+                {
+                    dimension: 'HCAHPS',
+                    measureName: 'Cleanliness and Quietness',
+                    usedInStarRating: true,
+                    updateFrequency: 'Quarterly',
+                    careComparePeriod: '7/1/2023 - 6/30/2024'
+                },
+                {
+                    dimension: 'HCAHPS',
+                    measureName: 'Discharge Information',
+                    usedInStarRating: true,
+                    updateFrequency: 'Quarterly',
+                    careComparePeriod: '7/1/2023 - 6/30/2024'
+                },
+                {
+                    dimension: 'HCAHPS',
+                    measureName: 'Care Transition',
+                    usedInStarRating: true,
+                    updateFrequency: 'Quarterly',
+                    careComparePeriod: '7/1/2023 - 6/30/2024'
+                },
+                {
+                    dimension: 'HCAHPS',
+                    measureName: 'Overall Hospital Rating',
+                    usedInStarRating: true,
+                    updateFrequency: 'Quarterly',
+                    careComparePeriod: '7/1/2023 - 6/30/2024'
+                },
+                // Timely & Effective Care
+                {
+                    dimension: 'Timely & Effective Care',
+                    measureName: 'Sepsis Management (SEP-1)',
+                    usedInStarRating: true,
+                    updateFrequency: 'Quarterly',
+                    careComparePeriod: '10/1/2023 - 9/30/2024'
+                },
+                {
+                    dimension: 'Timely & Effective Care',
+                    measureName: 'ED-2 Admit Decision to Departure Time',
+                    usedInStarRating: false,
+                    updateFrequency: 'Quarterly',
+                    careComparePeriod: '10/1/2023 - 9/30/2024'
+                },
+                {
+                    dimension: 'Timely & Effective Care',
+                    measureName: 'OP-18b Median Time in ED',
+                    usedInStarRating: true,
+                    updateFrequency: 'Quarterly',
+                    careComparePeriod: '10/1/2023 - 9/30/2024'
+                },
+                // Safety/Infections
+                {
+                    dimension: 'Safety of Care',
+                    measureName: 'CLABSI',
+                    usedInStarRating: true,
+                    updateFrequency: 'Quarterly',
+                    careComparePeriod: '1/1/2024 - 12/31/2024'
+                },
+                {
+                    dimension: 'Safety of Care',
+                    measureName: 'CAUTI',
+                    usedInStarRating: true,
+                    updateFrequency: 'Quarterly',
+                    careComparePeriod: '1/1/2024 - 12/31/2024'
+                },
+                {
+                    dimension: 'Safety of Care',
+                    measureName: 'SSI - Colon Surgery',
+                    usedInStarRating: true,
+                    updateFrequency: 'Quarterly',
+                    careComparePeriod: '1/1/2024 - 12/31/2024'
+                },
+                {
+                    dimension: 'Safety of Care',
+                    measureName: 'SSI - Abdominal Hysterectomy',
+                    usedInStarRating: true,
+                    updateFrequency: 'Quarterly',
+                    careComparePeriod: '1/1/2024 - 12/31/2024'
+                },
+                {
+                    dimension: 'Safety of Care',
+                    measureName: 'MRSA Bacteremia',
+                    usedInStarRating: true,
+                    updateFrequency: 'Quarterly',
+                    careComparePeriod: '1/1/2024 - 12/31/2024'
+                },
+                {
+                    dimension: 'Safety of Care',
+                    measureName: 'C. Difficile',
+                    usedInStarRating: true,
+                    updateFrequency: 'Quarterly',
+                    careComparePeriod: '1/1/2024 - 12/31/2024'
+                },
+                {
+                    dimension: 'Safety of Care',
+                    measureName: 'PSI-90 Patient Safety Composite',
+                    usedInStarRating: true,
+                    updateFrequency: 'Annually',
+                    careComparePeriod: '7/1/2021 - 6/30/2024'
+                }
+            ];
+            
+            dashboardData.starRatings = [
+                // Mortality Measures
+                {
+                    dimension: 'Mortality',
+                    measureId: 'MORT-30-AMI',
+                    measureName: 'Acute Myocardial Infarction (AMI) 30-Day Mortality Rate',
+                    sourcedFrom: 'HVBP',
+                    performancePeriod: '7/1/2020 - 6/30/2023'
+                },
+                {
+                    dimension: 'Mortality',
+                    measureId: 'MORT-30-CABG',
+                    measureName: 'Coronary Artery Bypass Graft (CABG) 30-Day Mortality Rate',
+                    sourcedFrom: 'HVBP',
+                    performancePeriod: '7/1/2020 - 6/30/2023'
+                },
+                {
+                    dimension: 'Mortality',
+                    measureId: 'MORT-30-COPD',
+                    measureName: 'Chronic Obstructive Pulmonary Disease (COPD) 30-Day Mortality Rate',
+                    sourcedFrom: 'HVBP',
+                    performancePeriod: '7/1/2020 - 6/30/2023'
+                },
+                {
+                    dimension: 'Mortality',
+                    measureId: 'MORT-30-HF',
+                    measureName: 'Heart Failure (HF) 30-Day Mortality Rate',
+                    sourcedFrom: 'HVBP',
+                    performancePeriod: '7/1/2020 - 6/30/2023'
+                },
+                {
+                    dimension: 'Mortality',
+                    measureId: 'MORT-30-PN',
+                    measureName: 'Pneumonia (PN) 30-Day Mortality Rate',
+                    sourcedFrom: 'HVBP',
+                    performancePeriod: '7/1/2020 - 6/30/2023'
+                },
+                {
+                    dimension: 'Mortality',
+                    measureId: 'MORT-30-STK',
+                    measureName: 'Stroke 30-Day Mortality Rate',
+                    sourcedFrom: 'IQR',
+                    performancePeriod: '7/1/2020 - 6/30/2023'
+                },
+                // Readmission Measures
+                {
+                    dimension: 'Readmission',
+                    measureId: 'READM-30-AMI',
+                    measureName: 'AMI 30-Day Readmission Rate',
+                    sourcedFrom: 'HVBP',
+                    performancePeriod: '7/1/2020 - 6/30/2023'
+                },
+                {
+                    dimension: 'Readmission',
+                    measureId: 'READM-30-CABG',
+                    measureName: 'CABG 30-Day Readmission Rate',
+                    sourcedFrom: 'HVBP',
+                    performancePeriod: '7/1/2020 - 6/30/2023'
+                },
+                {
+                    dimension: 'Readmission',
+                    measureId: 'READM-30-COPD',
+                    measureName: 'COPD 30-Day Readmission Rate',
+                    sourcedFrom: 'HVBP',
+                    performancePeriod: '7/1/2020 - 6/30/2023'
+                },
+                {
+                    dimension: 'Readmission',
+                    measureId: 'READM-30-HF',
+                    measureName: 'Heart Failure 30-Day Readmission Rate',
+                    sourcedFrom: 'HVBP',
+                    performancePeriod: '7/1/2020 - 6/30/2023'
+                },
+                {
+                    dimension: 'Readmission',
+                    measureId: 'READM-30-HWR',
+                    measureName: 'Hospital-Wide All-Cause Readmission',
+                    sourcedFrom: 'IQR',
+                    performancePeriod: '7/1/2020 - 6/30/2023'
+                },
+                {
+                    dimension: 'Readmission',
+                    measureId: 'READM-30-PN',
+                    measureName: 'Pneumonia 30-Day Readmission Rate',
+                    sourcedFrom: 'HVBP',
+                    performancePeriod: '7/1/2020 - 6/30/2023'
+                },
+                {
+                    dimension: 'Readmission',
+                    measureId: 'READM-30-THA/TKA',
+                    measureName: 'Total Hip/Knee Arthroplasty 30-Day Readmission Rate',
+                    sourcedFrom: 'HVBP',
+                    performancePeriod: '7/1/2020 - 6/30/2023'
+                }
+            ];
+            
+            dashboardData.leapfrog = [
+                // Infections
+                {
+                    dimension: 'Infections',
+                    measureId: 'HAI-5',
+                    measureName: 'MRSA Bacteremia',
+                    publicDescription: 'MRSA Infection Rate',
+                    sourcedFrom: 'Leapfrog/NHSN',
+                    performancePeriod: '7/1/2023 - 6/30/2024'
+                },
+                {
+                    dimension: 'Infections',
+                    measureId: 'HAI-6',
+                    measureName: 'Clostridium Difficile (C. diff)',
+                    publicDescription: 'C. Diff Infection Rate',
+                    sourcedFrom: 'Leapfrog/NHSN',
+                    performancePeriod: '7/1/2023 - 6/30/2024'
+                },
+                {
+                    dimension: 'Infections',
+                    measureId: 'HAI-1',
+                    measureName: 'CLABSI',
+                    publicDescription: 'Central Line Associated Bloodstream Infection',
+                    sourcedFrom: 'Leapfrog/NHSN',
+                    performancePeriod: '7/1/2023 - 6/30/2024'
+                },
+                {
+                    dimension: 'Infections',
+                    measureId: 'HAI-2',
+                    measureName: 'CAUTI',
+                    publicDescription: 'Catheter-Associated Urinary Tract Infection',
+                    sourcedFrom: 'Leapfrog/NHSN',
+                    performancePeriod: '7/1/2023 - 6/30/2024'
+                },
+                // Patient Safety
+                {
+                    dimension: 'Patient Safety',
+                    measureId: 'PSI-3',
+                    measureName: 'Pressure Ulcer Rate',
+                    publicDescription: 'Hospital-acquired pressure injuries',
+                    sourcedFrom: 'Leapfrog/CMS',
+                    performancePeriod: '1/1/2023 - 12/31/2023'
+                },
+                {
+                    dimension: 'Patient Safety',
+                    measureId: 'PSI-4',
+                    measureName: 'Death Rate in Low-Mortality DRGs',
+                    publicDescription: 'In-hospital deaths in low-risk conditions',
+                    sourcedFrom: 'Leapfrog/CMS',
+                    performancePeriod: '1/1/2023 - 12/31/2023'
+                },
+                // Practices to Prevent Errors
+                {
+                    dimension: 'Practices to Prevent Errors',
+                    measureId: 'CPOE',
+                    measureName: 'Computerized Physician Order Entry',
+                    publicDescription: 'Use of CPOE systems to prevent medication errors',
+                    sourcedFrom: 'Leapfrog Survey',
+                    performancePeriod: '2024 Survey Period'
+                },
+                {
+                    dimension: 'Practices to Prevent Errors',
+                    measureId: 'Bar Coding',
+                    measureName: 'Bar Code Medication Administration',
+                    publicDescription: 'Use of bar coding to prevent medication errors',
+                    sourcedFrom: 'Leapfrog Survey',
+                    performancePeriod: '2024 Survey Period'
+                }
+            ];
+            
+            calculateDateRanges();
+        }
+
+        // Calculate date ranges from performance periods
+        function calculateDateRanges() {
+            // Parse dates from performance periods
+            function parsePerformancePeriod(period) {
+                const matches = period.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/g);
+                if (matches && matches.length >= 2) {
+                    const start = new Date(matches[0]);
+                    const end = new Date(matches[1]);
+                    return { start, end };
+                }
+                return null;
+            }
+            
+            // Care Compare ranges
+            let ccStart = new Date(2024, 0, 1);
+            let ccEnd = new Date(2024, 11, 31);
+            dashboardData.careCompare.forEach(measure => {
+                const parsed = parsePerformancePeriod(measure.careComparePeriod);
+                if (parsed) {
+                    if (parsed.start < ccStart) ccStart = parsed.start;
+                    if (parsed.end > ccEnd) ccEnd = parsed.end;
+                }
+            });
+            
+            // Star Ratings ranges
+            let srStart = new Date(2020, 6, 1);
+            let srEnd = new Date(2023, 5, 30);
+            dashboardData.starRatings.forEach(measure => {
+                const parsed = parsePerformancePeriod(measure.performancePeriod);
+                if (parsed) {
+                    if (parsed.start < srStart) srStart = parsed.start;
+                    if (parsed.end > srEnd) srEnd = parsed.end;
+                }
+            });
+            
+            // Leapfrog ranges
+            let lfStart = new Date(2023, 6, 1);
+            let lfEnd = new Date(2024, 5, 30);
+            dashboardData.leapfrog.forEach(measure => {
+                const parsed = parsePerformancePeriod(measure.performancePeriod);
+                if (parsed) {
+                    if (parsed.start < lfStart) lfStart = parsed.start;
+                    if (parsed.end > lfEnd) lfEnd = parsed.end;
+                }
+            });
+            
+            dashboardData.dateRanges = {
+                careCompare: { start: ccStart, end: ccEnd },
+                starRatings: { start: srStart, end: srEnd },
+                leapfrog: { start: lfStart, end: lfEnd }
+            };
+        }
+
+        // Generate Gantt Chart
+        function generateGanttChart() {
+            const container = document.getElementById('gantt-chart');
+            const ranges = dashboardData.dateRanges;
+            
+            const overallStart = new Date(2020, 0, 1);
+            const overallEnd = new Date(2025, 11, 31);
+            const totalDays = (overallEnd - overallStart) / (1000 * 60 * 60 * 24);
+            
+            function calculateBar(start, end) {
+                const startDays = Math.max(0, (start - overallStart) / (1000 * 60 * 60 * 24));
+                const endDays = Math.min(totalDays, (end - overallStart) / (1000 * 60 * 60 * 24));
+                const left = (startDays / totalDays) * 100;
+                const width = ((endDays - startDays) / totalDays) * 100;
+                return { left, width };
+            }
+            
+            function formatDateRange(start, end) {
+                const options = { month: 'short', year: 'numeric' };
+                return `${start.toLocaleDateString('en-US', options)} - ${end.toLocaleDateString('en-US', options)}`;
+            }
+            
+            const ccBar = calculateBar(ranges.careCompare.start, ranges.careCompare.end);
+            const srBar = calculateBar(ranges.starRatings.start, ranges.starRatings.end);
+            const lfBar = calculateBar(ranges.leapfrog.start, ranges.leapfrog.end);
+            
+            container.innerHTML = `
+                <div class="gantt-row">
+                    <div class="gantt-label">Care Compare</div>
+                    <div class="gantt-timeline">
+                        <div class="gantt-bar care-compare-bar" style="left: ${ccBar.left}%; width: ${ccBar.width}%">
+                            ${formatDateRange(ranges.careCompare.start, ranges.careCompare.end)}
+                        </div>
+                    </div>
+                </div>
+                <div class="gantt-row">
+                    <div class="gantt-label">Star Ratings</div>
+                    <div class="gantt-timeline">
+                        <div class="gantt-bar star-ratings-bar" style="left: ${srBar.left}%; width: ${srBar.width}%">
+                            ${formatDateRange(ranges.starRatings.start, ranges.starRatings.end)}
+                        </div>
+                    </div>
+                </div>
+                <div class="gantt-row">
+                    <div class="gantt-label">Leapfrog</div>
+                    <div class="gantt-timeline">
+                        <div class="gantt-bar leapfrog-bar" style="left: ${lfBar.left}%; width: ${lfBar.width}%">
+                            ${formatDateRange(ranges.leapfrog.start, ranges.leapfrog.end)}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render Care Compare data
+        function renderCareCompareData() {
+            const container = document.getElementById('care-compare-content');
+            const groupedData = {};
+            
+            dashboardData.careCompare.forEach(measure => {
+                if (!groupedData[measure.dimension]) {
+                    groupedData[measure.dimension] = [];
+                }
+                groupedData[measure.dimension].push(measure);
+            });
+            
+            let html = '';
+            Object.keys(groupedData).forEach(dimension => {
+                html += `
+                    <div class="dimension-section">
+                        <div class="dimension-title">${dimension}</div>
+                        <table class="measure-table">
+                            <thead class="table-header">
+                                <tr>
+                                    <th>Measure Name</th>
+                                    <th>Used in Star Rating</th>
+                                    <th>Update Frequency</th>
+                                    <th>Performance Period</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                groupedData[dimension].forEach(measure => {
+                    html += `
+                        <tr>
+                            <td class="measure-name">${measure.measureName}</td>
+                            <td class="${measure.usedInStarRating ? 'yes-indicator' : 'no-indicator'}">
+                                ${measure.usedInStarRating ? '✓ Yes' : '✗ No'}
+                            </td>
+                            <td>${measure.updateFrequency}</td>
+                            <td><span class="performance-period">${measure.careComparePeriod}</span></td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table></div>';
+            });
+            
+            container.innerHTML = html || '<p>No Care Compare measures loaded.</p>';
+        }
+
+        // Render Star Ratings data
+        function renderStarRatingsData() {
+            const container = document.getElementById('star-ratings-content');
+            const groupedData = {};
+            
+            dashboardData.starRatings.forEach(measure => {
+                if (!groupedData[measure.dimension]) {
+                    groupedData[measure.dimension] = [];
+                }
+                groupedData[measure.dimension].push(measure);
+            });
+            
+            let html = '';
+            Object.keys(groupedData).forEach(dimension => {
+                html += `
+                    <div class="dimension-section">
+                        <div class="dimension-title">${dimension}</div>
+                        <table class="measure-table">
+                            <thead class="table-header">
+                                <tr>
+                                    <th>Measure ID</th>
+                                    <th>Measure Name</th>
+                                    <th>Source</th>
+                                    <th>Performance Period</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                groupedData[dimension].forEach(measure => {
+                    html += `
+                        <tr>
+                            <td><strong>${measure.measureId}</strong></td>
+                            <td class="measure-name">${measure.measureName}</td>
+                            <td>${measure.sourcedFrom}</td>
+                            <td><span class="performance-period">${measure.performancePeriod}</span></td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table></div>';
+            });
+            
+            container.innerHTML = html || '<p>No Star Ratings measures loaded.</p>';
+        }
+
+        // Render Leapfrog data
+        function renderLeapfrogData() {
+            const container = document.getElementById('leapfrog-content');
+            const groupedData = {};
+            
+            dashboardData.leapfrog.forEach(measure => {
+                if (!groupedData[measure.dimension]) {
+                    groupedData[measure.dimension] = [];
+                }
+                groupedData[measure.dimension].push(measure);
+            });
+            
+            let html = '';
+            Object.keys(groupedData).forEach(dimension => {
+                html += `
+                    <div class="dimension-section">
+                        <div class="dimension-title">${dimension}</div>
+                        <table class="measure-table">
+                            <thead class="table-header">
+                                <tr>
+                                    <th>Measure ID</th>
+                                    <th>Measure Name</th>
+                                    <th>Public Description</th>
+                                    <th>Source</th>
+                                    <th>Performance Period</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                groupedData[dimension].forEach(measure => {
+                    html += `
+                        <tr>
+                            <td><strong>${measure.measureId}</strong></td>
+                            <td class="measure-name">${measure.measureName}</td>
+                            <td>${measure.publicDescription}</td>
+                            <td>${measure.sourcedFrom}</td>
+                            <td><span class="performance-period">${measure.performancePeriod}</span></td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table></div>';
+            });
+            
+            container.innerHTML = html || '<p>No Leapfrog measures loaded.</p>';
+        }
+
+        // Update status message
+        function updateStatus(message, type = 'success') {
+            const statusEl = document.getElementById('data-status');
+            statusEl.className = 'data-status';
+            
+            if (type === 'warning') {
+                statusEl.classList.add('warning');
+                statusEl.innerHTML = `<span class="status-icon">⚠️</span><span>${message}</span>`;
+            } else if (type === 'error') {
+                statusEl.classList.add('error');
+                statusEl.innerHTML = `<span class="status-icon">❌</span><span>${message}</span>`;
+            } else if (type === 'loading') {
+                statusEl.innerHTML = `<span class="status-icon">⏳</span><span>${message}</span>`;
+            } else {
+                statusEl.innerHTML = `<span class="status-icon">✅</span><span>${message}</span>`;
+            }
+        }
+
+        // Manual data import function
+        function importManualData() {
+            const textarea = document.getElementById('csv-input');
+            const data = textarea.value.trim();
+            
+            if (!data) {
+                alert('Please paste data before clicking Import');
+                return;
+            }
+            
+            try {
+                // Parse the pasted data (handles both CSV and tab-delimited)
+                const parsed = parseManualData(data);
+                
+                if (parsed && parsed.length > 0) {
+                    processManualData(parsed);
+                    updateStatus('✅ Manual data imported successfully', 'success');
+                    dashboardData.loaded = true;
+                    generateGanttChart();
+                    
+                    // Render current view
+                    const activeView = document.querySelector('.toggle-btn.active').dataset.view;
+                    if (activeView === 'care-compare') renderCareCompareData();
+                    else if (activeView === 'star-ratings') renderStarRatingsData();
+                    else if (activeView === 'leapfrog') renderLeapfrogData();
+                    
+                    // Collapse the manual import section
+                    document.getElementById('manual-import').removeAttribute('open');
+                } else {
+                    alert('Could not parse the data. Please check the format and try again.');
+                }
+            } catch (error) {
+                console.error('Error importing manual data:', error);
+                alert('Error importing data: ' + error.message);
+            }
+        }
+        
+        // Parse manually pasted data
+        function parseManualData(text) {
+            const lines = text.split('\n').filter(line => line.trim());
+            const data = [];
+            
+            // Detect delimiter (tab or comma)
+            const delimiter = text.includes('\t') ? '\t' : ',';
+            
+            lines.forEach(line => {
+                const row = line.split(delimiter).map(cell => cell.trim().replace(/^["']|["']$/g, ''));
+                data.push(row);
+            });
+            
+            return data;
+        }
+        
+        // Process manually imported data
+        function processManualData(data) {
+            // Clear existing data
+            dashboardData.careCompare = [];
+            dashboardData.starRatings = [];
+            dashboardData.leapfrog = [];
+            
+            // Find header row and process data
+            let headerIndex = -1;
+            let currentSection = 'careCompare';
+            let currentDimension = '';
+            
+            for (let i = 0; i < data.length; i++) {
+                const row = data[i];
+                
+                // Detect section headers
+                if (row[0] && row[0].toLowerCase().includes('star rating')) {
+                    currentSection = 'starRatings';
+                    continue;
+                } else if (row[0] && row[0].toLowerCase().includes('leapfrog')) {
+                    currentSection = 'leapfrog';
+                    continue;
+                }
+                
+                // Detect dimension headers
+                if (row[0] && row[0].includes('Dimension')) {
+                    headerIndex = i;
+                    continue;
+                }
+                
+                // Process data rows
+                if (headerIndex >= 0 && row.length > 1) {
+                    if (row[0] && !row[1]) {
+                        // This is a dimension name
+                        currentDimension = row[0];
+                    } else if (row[1]) {
+                        // This is a measure
+                        if (currentSection === 'careCompare') {
+                            dashboardData.careCompare.push({
+                                dimension: row[0] || currentDimension,
+                                measureName: row[1],
+                                usedInStarRating: row[2] && (row[2].toLowerCase() === 'yes' || row[2] === true),
+                                updateFrequency: row[3] || 'Quarterly',
+                                careComparePeriod: row[4] || 'See documentation'
+                            });
+                        } else if (currentSection === 'starRatings') {
+                            dashboardData.starRatings.push({
+                                dimension: currentDimension,
+                                measureId: row[1],
+                                measureName: row[2] || row[1],
+                                sourcedFrom: row[3] || 'CMS',
+                                performancePeriod: row[4] || 'See documentation'
+                            });
+                        } else if (currentSection === 'leapfrog') {
+                            dashboardData.leapfrog.push({
+                                dimension: currentDimension,
+                                measureId: row[1],
+                                measureName: row[2] || row[1],
+                                publicDescription: row[3] || '',
+                                sourcedFrom: row[4] || 'Leapfrog',
+                                performancePeriod: row[5] || 'See documentation'
+                            });
+                        }
+                    }
+                }
+            }
+            
+            // If no structured data was found, try a simpler approach
+            if (dashboardData.careCompare.length === 0 && data.length > 1) {
+                // Assume first row is headers, rest is data
+                const headers = data[0];
+                for (let i = 1; i < data.length; i++) {
+                    if (data[i].length >= 2) {
+                        dashboardData.careCompare.push({
+                            dimension: data[i][0] || 'General',
+                            measureName: data[i][1] || data[i][0],
+                            usedInStarRating: false,
+                            updateFrequency: 'Quarterly',
+                            careComparePeriod: data[i][2] || 'Current Period'
+                        });
+                    }
+                }
+            }
+            
+            calculateDateRanges();
+        }
+
+        // Auto-refresh every 5 minutes
+        setInterval(loadGoogleSheetsData, 5 * 60 * 1000);
+    </script>
+</body>
+</html>
