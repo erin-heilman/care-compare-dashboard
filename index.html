@@ -870,9 +870,9 @@
                             const measure = {
                                 dimension: row[0] || currentDimension,
                                 measureName: row[1],
-                                source: row[2] || '',  // Column C - now "Source"
                                 whatPublicSees: row[3] || '',  // Column D - "What the Public Sees"
-                                careComparePeriod: row[5] || row[4] || 'See documentation'
+                                source: row[4] || '',  // Column E - "Source"
+                                careComparePeriod: row[5] || 'See documentation'
                             };
                             dashboardData.careCompareWebsite.push(measure);
                         }
