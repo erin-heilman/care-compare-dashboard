@@ -870,9 +870,8 @@
                             const measure = {
                                 dimension: row[0] || currentDimension,
                                 measureName: row[1],
-                                measureDescription: row[2] || '',  // Column C
-                                usedInStarRating: row[3] === 'Yes' || row[3] === true || row[3] === 'TRUE',
-                                updateFrequency: row[4] || 'Quarterly',
+                                source: row[2] || '',  // Column C - now "Source"
+                                whatPublicSees: row[3] || '',  // Column D - "What the Public Sees"
                                 careComparePeriod: row[5] || row[4] || 'See documentation'
                             };
                             dashboardData.careCompareWebsite.push(measure);
@@ -1467,9 +1466,8 @@
                                 <tr>
                                     <th>Measure Name</th>
                                     <th>Performance Period</th>
-                                    <th>Used in Star Rating</th>
-                                    <th>Update Frequency</th>
-                                    <th>Measure Description</th>
+                                    <th>Source</th>
+                                    <th>What the Public Sees</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1480,11 +1478,8 @@
                         <tr>
                             <td class="measure-name">${measure.measureName}</td>
                             <td><span class="performance-period">${measure.careComparePeriod}</span></td>
-                            <td class="${measure.usedInStarRating ? 'yes-indicator' : 'no-indicator'}">
-                                ${measure.usedInStarRating ? '✓ Yes' : '✗ No'}
-                            </td>
-                            <td>${measure.updateFrequency}</td>
-                            <td>${measure.measureDescription || ''}</td>
+                            <td>${measure.source || ''}</td>
+                            <td>${measure.whatPublicSees || ''}</td>
                         </tr>
                     `;
                 });
