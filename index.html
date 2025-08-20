@@ -1354,9 +1354,9 @@
                             <thead class="table-header">
                                 <tr>
                                     <th>Measure Name</th>
+                                    <th>Performance Period</th>
                                     <th>Used in Star Rating</th>
                                     <th>Update Frequency</th>
-                                    <th>Performance Period</th>
                                     <th>Measure Description</th>
                                 </tr>
                             </thead>
@@ -1367,11 +1367,11 @@
                     html += `
                         <tr>
                             <td class="measure-name">${measure.measureName}</td>
+                            <td><span class="performance-period">${measure.careComparePeriod}</span></td>
                             <td class="${measure.usedInStarRating ? 'yes-indicator' : 'no-indicator'}">
                                 ${measure.usedInStarRating ? '✓ Yes' : '✗ No'}
                             </td>
                             <td>${measure.updateFrequency}</td>
-                            <td><span class="performance-period">${measure.careComparePeriod}</span></td>
                             <td>${measure.measureDescription || ''}</td>
                         </tr>
                     `;
