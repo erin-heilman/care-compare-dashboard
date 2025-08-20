@@ -373,10 +373,11 @@
             <div class="timeline-header">
                 <div class="timeline-title">Current Performance Periods Being Published</div>
                 <div class="view-toggles">
-                    <button class="toggle-btn active" data-view="timeline">Timeline Overview</button>
-                    <button class="toggle-btn" data-view="care-compare">July 2025 Data Release</button>
-                    <button class="toggle-btn" data-view="star-ratings">Star Ratings Measures</button>
-                    <button class="toggle-btn" data-view="leapfrog">Leapfrog Measures</button>
+                <button class="toggle-btn active" data-view="timeline">Timeline Overview</button>
+                <button class="toggle-btn" data-view="care-compare">July 2025 Data Release</button>
+                <button class="toggle-btn" data-view="care-compare-website">Care Compare Measures</button>
+                <button class="toggle-btn" data-view="star-ratings">Star Ratings Measures</button>
+                <button class="toggle-btn" data-view="leapfrog">Leapfrog Measures</button>
                 </div>
             </div>
 
@@ -407,6 +408,16 @@
                         <div class="loading">
                             <div class="loading-spinner"></div>
                             <p>Loading Care Compare measures...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Care Compare Website Only -->
+                <div id="care-compare-website-view" class="measure-view">
+                    <div id="care-compare-website-content">
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            <p>Loading Care Compare Website measures...</p>
                         </div>
                     </div>
                 </div>
@@ -465,6 +476,7 @@
         // Application State
         let dashboardData = {
             careCompare: [],
+            careCompareWebsite: [],
             starRatings: [],
             leapfrog: [],
             dateRanges: {},
@@ -500,6 +512,8 @@
             if (dashboardData.loaded) {
                 if (view === 'care-compare') {
                     renderCareCompareData();
+                } else if (view === 'care-compare-website') {
+                    renderCareCompareWebsiteData();
                 } else if (view === 'star-ratings') {
                     renderStarRatingsData();
                 } else if (view === 'leapfrog') {
@@ -767,6 +781,7 @@
             
             // Clear existing data
             dashboardData.careCompare = [];
+            dashboardData.careCompareWebsite = [];
             dashboardData.starRatings = [];
             dashboardData.leapfrog = [];
             
@@ -818,7 +833,54 @@
                     console.log('Processed', dashboardData.careCompare.length, 'Care Compare measures');
                 }
             }
-            
+            // Process Care Compare Website Only sheet (second sheet)
+            if (sheetsData.length > 1 && sheetsData[1] && sheetsData[1].values) {
+                const values = sheetsData[1].values;
+                console.log('Processing Care Compare Website sheet with', values.length, 'rows');
+                
+                let headerIndex = -1;
+                let currentDimension = '';
+                
+                // Find header row
+                for (let i = 0; i < Math.min(10, values.length); i++) {
+                    const row = values[i];
+                    if (row && row.length > 0) {
+                        const rowText = row.join(' ').toLowerCase();
+                        if (rowText.includes('dimension') || rowText.includes('measure')) {
+                            headerIndex = i;
+                            console.log('Found Care Compare Website header at row', i, ':', row);
+                            break;
+                        }
+                    }
+                }
+                
+                if (headerIndex >= 0) {
+                    // Process Care Compare Website measures
+                    for (let i = headerIndex + 1; i < values.length; i++) {
+                        const row = values[i];
+                        if (!row || row.length === 0) continue;
+                        
+                        // Check if this is a dimension row
+                        if (row[0] && (!row[1] || row[1] === '')) {
+                            currentDimension = row[0];
+                            console.log('Found dimension:', currentDimension);
+                        } 
+                        // Check if this is a measure row
+                        else if (row[1] && row[1] !== '') {
+                            const measure = {
+                                dimension: row[0] || currentDimension,
+                                measureName: row[1],
+                                measureDescription: row[2] || '',  // Column C
+                                usedInStarRating: row[3] === 'Yes' || row[3] === true || row[3] === 'TRUE',
+                                updateFrequency: row[4] || 'Quarterly',
+                                careComparePeriod: row[5] || row[4] || 'See documentation'
+                            };
+                            dashboardData.careCompareWebsite.push(measure);
+                        }
+                    }
+                    console.log('Processed', dashboardData.careCompareWebsite.length, 'Care Compare Website measures');
+                }
+            }
             // Process Star Ratings sheet (if exists)
             if (sheetsData.length > 2 && sheetsData[2] && sheetsData[2].values) {
                 const values = sheetsData[2].values;
@@ -1383,6 +1445,56 @@
             container.innerHTML = html || '<p>No Care Compare measures loaded.</p>';
         }
 
+        // Render Care Compare Website data
+        function renderCareCompareWebsiteData() {
+            const container = document.getElementById('care-compare-website-content');
+            const groupedData = {};
+            
+            dashboardData.careCompareWebsite.forEach(measure => {
+                if (!groupedData[measure.dimension]) {
+                    groupedData[measure.dimension] = [];
+                }
+                groupedData[measure.dimension].push(measure);
+            });
+            
+            let html = '';
+            Object.keys(groupedData).forEach(dimension => {
+                html += `
+                    <div class="dimension-section">
+                        <div class="dimension-title">${dimension}</div>
+                        <table class="measure-table">
+                            <thead class="table-header">
+                                <tr>
+                                    <th>Measure Name</th>
+                                    <th>Performance Period</th>
+                                    <th>Used in Star Rating</th>
+                                    <th>Update Frequency</th>
+                                    <th>Measure Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                groupedData[dimension].forEach(measure => {
+                    html += `
+                        <tr>
+                            <td class="measure-name">${measure.measureName}</td>
+                            <td><span class="performance-period">${measure.careComparePeriod}</span></td>
+                            <td class="${measure.usedInStarRating ? 'yes-indicator' : 'no-indicator'}">
+                                ${measure.usedInStarRating ? '✓ Yes' : '✗ No'}
+                            </td>
+                            <td>${measure.updateFrequency}</td>
+                            <td>${measure.measureDescription || ''}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table></div>';
+            });
+            
+            container.innerHTML = html || '<p>No Care Compare Website measures loaded.</p>';
+        }
+        
         // Render Star Ratings data
         function renderStarRatingsData() {
             const container = document.getElementById('star-ratings-content');
