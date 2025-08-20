@@ -807,6 +807,7 @@
                             const measure = {
                                 dimension: row[0] || currentDimension,
                                 measureName: row[1],
+                                measureDescription: row[2] || '',  // Add this line - Column C
                                 usedInStarRating: row[3] === 'Yes' || row[3] === true || row[3] === 'TRUE',
                                 updateFrequency: row[4] || 'Quarterly',
                                 careComparePeriod: row[5] || row[4] || 'See documentation'
@@ -1356,6 +1357,7 @@
                                     <th>Used in Star Rating</th>
                                     <th>Update Frequency</th>
                                     <th>Performance Period</th>
+                                    <th>Measure Description</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1370,6 +1372,7 @@
                             </td>
                             <td>${measure.updateFrequency}</td>
                             <td><span class="performance-period">${measure.careComparePeriod}</span></td>
+                            <td>${measure.measureDescription || ''}</td>
                         </tr>
                     `;
                 });
