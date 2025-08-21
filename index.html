@@ -335,61 +335,6 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* Release Schedule Styles */
-        .release-schedule-container {
-            margin-top: 32px;
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        .schedule-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #004877;
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #e9ecef;
-        }
-
-        .release-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .release-quarter {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 16px;
-            border-left: 4px solid #004877;
-        }
-
-        .quarter-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: #004877;
-            margin-bottom: 12px;
-        }
-
-        .measure-list {
-            font-size: 13px;
-            line-height: 1.6;
-        }
-
-        .measure-item {
-            padding: 4px 0;
-            color: #555;
-        }
-    </style>
-</head>
     </style>
 </head>
 <body>
@@ -440,16 +385,18 @@
                 <!-- Timeline Overview -->
                 <div id="timeline-view" class="measure-view active">
                     <div class="gantt-container">
-                        <!-- Gantt chart content -->
-                    </div>
-                    
-                    <!-- Measure Release Schedule -->
-                    <div class="release-schedule-container">
-                        <h3 class="schedule-title">CMS Care Compare Release Schedule</h3>
-                        <div id="release-schedule">
+                        <div class="gantt-axis">
+                            <span>2020</span>
+                            <span>2021</span>
+                            <span>2022</span>
+                            <span>2023</span>
+                            <span>2024</span>
+                            <span>2025</span>
+                        </div>
+                        <div id="gantt-chart">
                             <div class="loading">
                                 <div class="loading-spinner"></div>
-                                <p>Loading release schedule...</p>
+                                <p>Loading timeline...</p>
                             </div>
                         </div>
                     </div>
@@ -533,7 +480,6 @@
             starRatings: [],
             leapfrog: [],
             dateRanges: {},
-            releaseSchedule: {}, // Add this line
             loaded: false
         };
 
@@ -1446,88 +1392,6 @@
                     </div>
                 </div>
             `;
-        }
-
-        // Generate Release Schedule
-        function generateReleaseSchedule() {
-            const container = document.getElementById('release-schedule');
-            
-            // Define the release schedule data
-            const schedule = {
-                'January Release': [
-                    'PC-01 (being phased out)',
-                    'Sepsis (SEP-1)',
-                    'HCP COVID-19 Immunization',
-                    'HCAHPS',
-                    'OP-29, OP-3b, OP-22, OP-23',
-                    'EDV, OP-18b, OP-32',
-                    'OP-35 ADM/ED, OP-36',
-                    'IPFQR measures',
-                    'HAI/NHSN (CLABSI, CAUTI, SSI, MRSA, C.Diff)',
-                    'MSPB'
-                ],
-                'April Release': [
-                    'PC-01 (being phased out)',
-                    'Sepsis (SEP-1)',
-                    'HCP COVID-19 Immunization',
-                    'HCAHPS',
-                    'OP-3b, OP-23, OP-18b',
-                    'HAI/NHSN (CLABSI, CAUTI, SSI, MRSA, C.Diff)',
-                    'Star Rating Release (sometimes)'
-                ],
-                'July Release': [
-                    'PC-01 (being phased out)',
-                    'Sepsis (SEP-1)',
-                    'HCP COVID-19 Immunization',
-                    'HCAHPS',
-                    'OP-3b, OP-23, OP-18b',
-                    'OP-8, OP-10, OP-13, OP-39',
-                    'IPFQR READM-30',
-                    'HAI/NHSN (CLABSI, CAUTI, SSI, MRSA, C.Diff)',
-                    'PSI-04, PSI-90',
-                    'Mortality measures (30-day)',
-                    'Readmission measures (30-day)',
-                    'Payment measures',
-                    'COMP-HIP-KNEE',
-                    'Star Rating Release (usually)'
-                ],
-                'October Release': [
-                    'All IQR measures including eCQMs',
-                    'PC-02, PC-05, PC-07',
-                    'Safe Use of Opioids',
-                    'THA/TKA PRO-PM',
-                    'Hybrid measures',
-                    'Sepsis (SEP-1)',
-                    'HCAHPS',
-                    'HCP COVID-19 Immunization',
-                    'IMM-3',
-                    'OQR measures',
-                    'IPFQR measures',
-                    'HAI/NHSN (CLABSI, CAUTI, SSI, MRSA, C.Diff)'
-                ]
-            };
-            
-            let html = '<div class="release-grid">';
-            
-            Object.keys(schedule).forEach(quarter => {
-                html += `
-                    <div class="release-quarter">
-                        <div class="quarter-title">${quarter}</div>
-                        <div class="measure-list">
-                `;
-                
-                schedule[quarter].forEach(measure => {
-                    html += `<div class="measure-item">• ${measure}</div>`;
-                });
-                
-                html += `
-                        </div>
-                    </div>
-                `;
-            });
-            
-            html += '</div>';
-            container.innerHTML = html;
         }
 
         // Render Care Compare data
