@@ -331,9 +331,87 @@
             margin: 0 auto 20px;
         }
         
-        @keyframes spin {
+@keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+        
+        /* Quarterly Release Schedule Styles */
+        .release-schedule-section {
+            margin: 40px 0;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 32px;
+        }
+
+        .release-schedule-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #004877;
+            margin-bottom: 24px;
+        }
+
+        .quarterly-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .quarter-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid #007bff;
+        }
+
+        .quarter-card.q1 { border-left-color: #28a745; }
+        .quarter-card.q2 { border-left-color: #ffc107; }
+        .quarter-card.q3 { border-left-color: #17a2b8; }
+        .quarter-card.q4 { border-left-color: #dc3545; }
+
+        .quarter-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .program-section {
+            margin-bottom: 12px;
+        }
+
+        .program-title {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 6px;
+            padding: 4px 8px;
+            background-color: white;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .measure-list {
+            margin-left: 10px;
+        }
+
+        .measure-item {
+            padding: 2px 0;
+            color: #666;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .download-only {
+            color: #999;
+            font-size: 11px;
+            font-style: italic;
+        }
+
+        .no-measures {
+            color: #999;
+            font-style: italic;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -443,6 +521,17 @@
                 </div>
             </div>
         </div>
+
+        <!-- Quarterly Release Schedule -->
+        <div class="release-schedule-section">
+            <h2 class="release-schedule-title">📅 Quarterly Measure Release Schedule</h2>
+            <div id="quarterlyReleases" class="quarterly-grid">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading release schedule...</p>
+                </div>
+            </div>
+        </div>
         
         <!-- Data Status (moved to bottom) -->
         <div id="data-status" class="data-status" style="margin-top: 20px;">
@@ -473,6 +562,21 @@
             leapfrog: '3'
         };
         
+        // Quarterly Release Schedule Configuration
+        const quarterMap = {
+            'Jan': 'Q1 - January',
+            'Apr': 'Q2 - April',
+            'Jul': 'Q3 - July',
+            'Oct': 'Q4 - October'
+        };
+
+        const quarterClass = {
+            'Jan': 'q1',
+            'Apr': 'q2',
+            'Jul': 'q3',
+            'Oct': 'q4'
+        };
+        
         // Application State
         let dashboardData = {
             careCompare: [],
@@ -483,11 +587,120 @@
             loaded: false
         };
 
-        // Initialize Dashboard
+// Initialize Dashboard
         document.addEventListener('DOMContentLoaded', function() {
             loadGoogleSheetsData();
             setupToggleButtons();
+            fetchReleaseSchedule();  // Add this line inside the DOMContentLoaded
         });
+
+        // Fetch Quarterly Release Schedule
+        async function fetchReleaseSchedule() {
+            try {
+                const range = 'Measure Release Schedule!A:G';
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=AIzaSyBemUDlfHO1VdErYMxN48n6ojuoK5GgKQA`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.values) {
+                    processReleaseData(data.values);
+                }
+            } catch (error) {
+                console.error('Error fetching release schedule:', error);
+                document.getElementById('quarterlyReleases').innerHTML = 
+                    '<div class="loading-message">Error loading release schedule. Please try again later.</div>';
+            }
+        }
+
+        function processReleaseData(rows) {
+            const headers = rows[0];
+            const quarters = ['Jan', 'Apr', 'Jul', 'Oct'];
+            
+            const quarterlyData = {};
+            quarters.forEach(q => {
+                quarterlyData[q] = {};
+            });
+
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row || row.length < 7) continue;
+                
+                const measureName = row[0];
+                const program = row[6] || 'Other';
+                
+                quarters.forEach((quarter, index) => {
+                    if (row[index + 1] && row[index + 1].trim() === '✓') {
+                        if (!quarterlyData[quarter][program]) {
+                            quarterlyData[quarter][program] = [];
+                        }
+                        quarterlyData[quarter][program].push(measureName);
+                    }
+                });
+            }
+
+            displayQuarterlyCards(quarterlyData);
+        }
+
+        function displayQuarterlyCards(quarterlyData) {
+            const container = document.getElementById('quarterlyReleases');
+            container.innerHTML = '';
+
+            Object.keys(quarterlyData).forEach(quarter => {
+                const card = createQuarterCard(quarter, quarterlyData[quarter]);
+                container.appendChild(card);
+            });
+        }
+
+        function createQuarterCard(quarter, programs) {
+            const card = document.createElement('div');
+            card.className = `quarter-card ${quarterClass[quarter]}`;
+            
+            const header = document.createElement('div');
+            header.className = 'quarter-header';
+            header.textContent = quarterMap[quarter];
+            card.appendChild(header);
+
+            const sortedPrograms = Object.keys(programs).sort();
+            
+            if (sortedPrograms.length === 0) {
+                const noMeasures = document.createElement('div');
+                noMeasures.className = 'no-measures';
+                noMeasures.textContent = 'No measures scheduled';
+                card.appendChild(noMeasures);
+            } else {
+                sortedPrograms.forEach(program => {
+                    const programSection = document.createElement('div');
+                    programSection.className = 'program-section';
+                    
+                    const programTitle = document.createElement('div');
+                    programTitle.className = 'program-title';
+                    programTitle.textContent = `${program} (${programs[program].length})`;
+                    programSection.appendChild(programTitle);
+                    
+                    const measureList = document.createElement('div');
+                    measureList.className = 'measure-list';
+                    
+                    programs[program].sort().forEach(measure => {
+                        const measureItem = document.createElement('div');
+                        measureItem.className = 'measure-item';
+                        
+                        if (measure.includes('(download only)')) {
+                            measureItem.innerHTML = `• ${measure.replace('(download only)', '<span class="download-only">(download only)</span>')}`;
+                        } else {
+                            measureItem.textContent = `• ${measure}`;
+                        }
+                        
+                        measureList.appendChild(measureItem);
+                    });
+                    
+                    programSection.appendChild(measureList);
+                    card.appendChild(programSection);
+                });
+            }
+
+            return card;
+        }
 
         // Setup toggle functionality
         function setupToggleButtons() {
