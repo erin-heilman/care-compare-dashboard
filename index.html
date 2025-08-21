@@ -652,8 +652,7 @@
             processReleaseData(sampleData);
         }
 
-        function processReleaseData(rows) {
-            const headers = rows[0];
+function processReleaseData(rows) {
             const quarters = ['Jan', 'Apr', 'Jul', 'Oct'];
             
             const quarterlyData = {};
@@ -661,23 +660,42 @@
                 quarterlyData[q] = {};
             });
 
+            let currentProgram = '';
+            
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
-                if (!row || row.length < 7) continue;
+                if (!row || row.length === 0) continue;
                 
-                const measureName = row[0];
-                const program = row[6] || 'Other';
+                // Check if this is a program header row (like "IQR MEASURES", "OQR MEASURES", etc.)
+                const firstCell = row[0] ? row[0].trim() : '';
+                if (firstCell.includes('MEASURES') || firstCell.includes('HAI/NHSN') || firstCell.includes('CLAIMS')) {
+                    // Extract program name from header
+                    if (firstCell.includes('IQR')) currentProgram = 'IQR';
+                    else if (firstCell.includes('OQR')) currentProgram = 'OQR';
+                    else if (firstCell.includes('IPFQR')) currentProgram = 'IPFQR';
+                    else if (firstCell.includes('HAI') || firstCell.includes('NHSN')) currentProgram = 'HAI';
+                    else if (firstCell.includes('CLAIMS')) currentProgram = 'Claims';
+                    continue; // Skip the header row itself
+                }
                 
-                quarters.forEach((quarter, index) => {
-                    if (row[index + 1] && row[index + 1].trim() === '✓') {
-                        if (!quarterlyData[quarter][program]) {
-                            quarterlyData[quarter][program] = [];
+                // If we have a measure name and a current program
+                const measureName = row[0] ? row[0].trim() : '';
+                const program = row[6] ? row[6].trim() : currentProgram; // Use column G if available, otherwise use detected program
+                
+                if (measureName && measureName !== '' && program) {
+                    // Check each quarter column (B, C, D, E = indices 1, 2, 3, 4)
+                    quarters.forEach((quarter, index) => {
+                        if (row[index + 1] && row[index + 1].toString().trim() === '✓') {
+                            if (!quarterlyData[quarter][program]) {
+                                quarterlyData[quarter][program] = [];
+                            }
+                            quarterlyData[quarter][program].push(measureName);
                         }
-                        quarterlyData[quarter][program].push(measureName);
-                    }
-                });
+                    });
+                }
             }
 
+            console.log('Processed quarterly data:', quarterlyData); // Debug log
             displayQuarterlyCards(quarterlyData);
         }
 
