@@ -594,47 +594,63 @@
             fetchReleaseSchedule();  // Add this line inside the DOMContentLoaded
         });
 
-// Fetch Quarterly Release Schedule
+// Fetch Quarterly Release Schedule (no API key needed)
         async function fetchReleaseSchedule() {
             try {
-                // Try using the same Google Apps Script if available
-                if (GOOGLE_APPS_SCRIPT_URL && GOOGLE_APPS_SCRIPT_URL.startsWith('https://script.google.com')) {
-                    try {
-                        const response = await fetch(GOOGLE_APPS_SCRIPT_URL);
-                        if (response.ok) {
-                            const result = await response.json();
-                            if (result.success && result.data && result.data['Measure Release Schedule']) {
-                                processReleaseData(result.data['Measure Release Schedule']);
-                                return;
-                            }
-                        }
-                    } catch (gasError) {
-                        console.log('Google Apps Script failed for release schedule:', gasError);
-                    }
-                }
+                // Use direct CSV export (no API key needed for public sheets)
+                const gid = '802188096'; // The GID from your sheet URL
+                const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
                 
-                // Fallback to direct API call
-                const range = 'Measure Release Schedule!A:G';
-                const apiKey = 'AIzaSyDRk_GPI0WM0t9p-Pm7FcMGf79rYT6gJzI'; // Public API key for sheets
-                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${apiKey}`;
+                // Use a CORS proxy to fetch the CSV
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(csvUrl)}`;
                 
-                const response = await fetch(url);
+                const response = await fetch(proxyUrl);
                 if (!response.ok) {
-                    throw new Error(`API request failed: ${response.status}`);
+                    throw new Error(`Failed to fetch: ${response.status}`);
                 }
                 
-                const data = await response.json();
+                const csvText = await response.text();
+                const rows = parseCSV(csvText);
                 
-                if (data.values) {
-                    processReleaseData(data.values);
+                if (rows && rows.length > 0) {
+                    processReleaseData(rows);
                 } else {
-                    throw new Error('No data found in sheet');
+                    throw new Error('No data found');
                 }
             } catch (error) {
                 console.error('Error fetching release schedule:', error);
                 // Load sample data as fallback
                 loadSampleReleaseData();
             }
+        }
+        // CSV parser function
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n');
+            const rows = [];
+            
+            for (let line of lines) {
+                const row = [];
+                let current = '';
+                let inQuotes = false;
+                
+                for (let char of line) {
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        row.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                row.push(current.trim());
+                
+                if (row.length > 1 || row[0]) {
+                    rows.push(row);
+                }
+            }
+            
+            return rows;
         }
 
         // Add this new function for sample data
