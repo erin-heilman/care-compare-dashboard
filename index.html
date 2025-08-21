@@ -580,7 +580,10 @@
             
             // Load data if needed
             if (dashboardData.loaded) {
-                if (view === 'care-compare') {
+                if (view === 'timeline') {
+                    generateGanttChart();
+                    generateReleaseSchedule();
+                } else if (view === 'care-compare') {
                     renderCareCompareData();
                 } else if (view === 'care-compare-website') {
                     renderCareCompareWebsiteData();
@@ -728,6 +731,7 @@
                     updateStatus(`✅ Connected via Google Apps Script - ${measureCount} measures loaded`, 'success');
                     dashboardData.loaded = true;
                     generateGanttChart();
+                    generateReleaseSchedule();
                     
                     console.log('Dashboard data loaded:', {
                         careCompare: dashboardData.careCompare.length + ' measures',
@@ -748,6 +752,7 @@
                     updateStatus(`✅ Connected to Google Sheets - ${measureCount} measures loaded`, 'success');
                     dashboardData.loaded = true;
                     generateGanttChart();
+                    generateReleaseSchedule();
                     
                     console.log('Dashboard data processed:', {
                         careCompare: dashboardData.careCompare.length + ' measures',
@@ -770,6 +775,7 @@
                 updateStatus('⚠️ Using sample data - See instructions below to set up Google Apps Script', 'warning');
                 loadDetailedSampleData();
                 generateGanttChart();
+                generateReleaseSchedule();
                 dashboardData.loaded = true;
                 
                 // Show setup instructions
@@ -1772,6 +1778,7 @@
                     updateStatus('✅ Manual data imported successfully', 'success');
                     dashboardData.loaded = true;
                     generateGanttChart();
+                    generateReleaseSchedule();
                     
                     // Render current view
                     const activeView = document.querySelector('.toggle-btn.active').dataset.view;
