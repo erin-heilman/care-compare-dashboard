@@ -678,9 +678,14 @@ function processReleaseData(rows) {
 
             let currentProgram = '';
             
-            for (let i = 1; i < rows.length; i++) {
+            for (let i = 0; i < rows.length; i++) {
                 const row = rows[i];
                 if (!row || row.length === 0) continue;
+                
+                // Skip the header row
+                if (i === 0 && row[0] && row[0].toLowerCase().includes('measure')) {
+                    continue;
+                }
                 
                 // Check if this is a program header row (like "IQR MEASURES", "OQR MEASURES", etc.)
                 const firstCell = row[0] ? row[0].trim() : '';
@@ -694,18 +699,30 @@ function processReleaseData(rows) {
                     continue; // Skip the header row itself
                 }
                 
-                // If we have a measure name and a current program
+                // Get measure name and program
                 const measureName = row[0] ? row[0].trim() : '';
-                const program = row[6] ? row[6].trim() : currentProgram; // Use column G if available, otherwise use detected program
                 
-                if (measureName && measureName !== '' && program) {
+                // Column F (index 5) should have the program, but if not, use currentProgram
+                let program = '';
+                if (row.length > 5 && row[5]) {
+                    program = row[5].trim();
+                } else if (currentProgram) {
+                    program = currentProgram;
+                }
+                
+                // Only process if we have both measure name and program
+                if (measureName && measureName !== '' && program && program !== '') {
                     // Check each quarter column (B, C, D, E = indices 1, 2, 3, 4)
                     quarters.forEach((quarter, index) => {
-                        if (row[index + 1] && row[index + 1].toString().trim() === '✓') {
+                        const cellValue = row[index + 1] ? row[index + 1].trim() : '';
+                        // Check for checkmark - might be ✓ or TRUE or Yes
+                        if (cellValue === '✓' || cellValue === 'TRUE' || cellValue.toLowerCase() === 'yes' || cellValue === '1') {
                             if (!quarterlyData[quarter][program]) {
                                 quarterlyData[quarter][program] = [];
                             }
-                            quarterlyData[quarter][program].push(measureName);
+                            if (!quarterlyData[quarter][program].includes(measureName)) {
+                                quarterlyData[quarter][program].push(measureName);
+                            }
                         }
                     });
                 }
