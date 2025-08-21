@@ -1463,6 +1463,87 @@
                 </div>
             `;
         }
+        // Generate Release Schedule
+        function generateReleaseSchedule() {
+            const container = document.getElementById('release-schedule');
+            
+            // Define the release schedule data
+            const schedule = {
+                'January Release': [
+                    'PC-01 (being phased out)',
+                    'Sepsis (SEP-1)',
+                    'HCP COVID-19 Immunization',
+                    'HCAHPS',
+                    'OP-29, OP-3b, OP-22, OP-23',
+                    'EDV, OP-18b, OP-32',
+                    'OP-35 ADM/ED, OP-36',
+                    'IPFQR measures',
+                    'HAI/NHSN (CLABSI, CAUTI, SSI, MRSA, C.Diff)',
+                    'MSPB'
+                ],
+                'April Release': [
+                    'PC-01 (being phased out)',
+                    'Sepsis (SEP-1)',
+                    'HCP COVID-19 Immunization',
+                    'HCAHPS',
+                    'OP-3b, OP-23, OP-18b',
+                    'HAI/NHSN (CLABSI, CAUTI, SSI, MRSA, C.Diff)',
+                    'Star Rating Release (sometimes)'
+                ],
+                'July Release': [
+                    'PC-01 (being phased out)',
+                    'Sepsis (SEP-1)',
+                    'HCP COVID-19 Immunization',
+                    'HCAHPS',
+                    'OP-3b, OP-23, OP-18b',
+                    'OP-8, OP-10, OP-13, OP-39',
+                    'IPFQR READM-30',
+                    'HAI/NHSN (CLABSI, CAUTI, SSI, MRSA, C.Diff)',
+                    'PSI-04, PSI-90',
+                    'Mortality measures (30-day)',
+                    'Readmission measures (30-day)',
+                    'Payment measures',
+                    'COMP-HIP-KNEE',
+                    'Star Rating Release (usually)'
+                ],
+                'October Release': [
+                    'All IQR measures including eCQMs',
+                    'PC-02, PC-05, PC-07',
+                    'Safe Use of Opioids',
+                    'THA/TKA PRO-PM',
+                    'Hybrid measures',
+                    'Sepsis (SEP-1)',
+                    'HCAHPS',
+                    'HCP COVID-19 Immunization',
+                    'IMM-3',
+                    'OQR measures',
+                    'IPFQR measures',
+                    'HAI/NHSN (CLABSI, CAUTI, SSI, MRSA, C.Diff)'
+                ]
+            };
+            
+            let html = '<div class="release-grid">';
+            
+            Object.keys(schedule).forEach(quarter => {
+                html += `
+                    <div class="release-quarter">
+                        <div class="quarter-title">${quarter}</div>
+                        <div class="measure-list">
+                `;
+                
+                schedule[quarter].forEach(measure => {
+                    html += `<div class="measure-item">• ${measure}</div>`;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
 
         // Render Care Compare data
         function renderCareCompareData() {
